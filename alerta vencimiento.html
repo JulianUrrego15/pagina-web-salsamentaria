@@ -1,0 +1,224 @@
+<!--
+    ALERTA DE VENCIMIENTOS
+    Se agrega sola a todas las pantallas desde app.py (agregar_alerta_vencimientos).
+    No necesita Bootstrap: usa su propio estilo y JavaScript.
+-->
+
+<style>
+    #alerta-venc {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 2000;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #alerta-venc .av-boton {
+        position: relative;
+        display: block;
+        margin-left: auto;
+        width: 56px;
+        height: 56px;
+        border: 0;
+        border-radius: 50%;
+        background: #212529;
+        color: #fff;
+        font-size: 26px;
+        line-height: 56px;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    #alerta-venc .av-numero {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 5px;
+        border-radius: 11px;
+        background: #dc3545;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 22px;
+    }
+
+    #alerta-venc .av-panel,
+    #alerta-venc .av-aviso {
+        display: none;
+        margin-bottom: 12px;
+        width: 400px;
+        max-width: calc(100vw - 40px);
+        background: #fff;
+        color: #212529;
+        border-radius: 10px;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.30);
+        overflow: hidden;
+    }
+
+    #alerta-venc .av-panel.abierto,
+    #alerta-venc .av-aviso.abierto {
+        display: block;
+    }
+
+    #alerta-venc .av-cabecera {
+        padding: 12px 16px;
+        background: #ffc107;
+        font-weight: 700;
+    }
+
+    #alerta-venc .av-lista {
+        max-height: 55vh;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    #alerta-venc .av-lista li {
+        padding: 10px 16px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
+
+    #alerta-venc .av-lista li:last-child {
+        border-bottom: 0;
+    }
+
+    #alerta-venc .av-detalle {
+        display: block;
+        color: #6c757d;
+        font-size: 12px;
+    }
+
+    #alerta-venc .av-estado {
+        font-weight: 700;
+        color: #b58100;
+    }
+
+    #alerta-venc .av-estado.vencido {
+        color: #b02a37;
+    }
+
+    #alerta-venc .av-aviso {
+        padding: 12px 16px;
+        border-left: 6px solid #ffc107;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    @media print {
+        #alerta-venc {
+            display: none;
+        }
+    }
+</style>
+
+
+<div
+    id="alerta-venc"
+    data-firma="{{ firma }}"
+>
+
+    <div class="av-aviso" id="av-aviso" role="alert">
+        <strong>
+            ⚠ {{ lotes|length }}
+            {{ "lote por vencer" if lotes|length == 1 else "lotes por vencer" }}
+        </strong>
+        <br>
+        Hay mercancía que vence en {{ dias_alerta }} días o menos. Toca aquí para ver el detalle.
+    </div>
+
+
+    <div class="av-panel" id="av-panel">
+
+        <div class="av-cabecera">
+            Mercancía por vencer (próximos {{ dias_alerta }} días)
+        </div>
+
+        <ul class="av-lista">
+
+            {% for lote in lotes %}
+
+                <li>
+
+                    <strong>{{ lote.producto }}</strong>
+
+                    <span class="av-estado {{ 'vencido' if lote.dias < 0 else '' }}">
+                        · {{ lote.texto }}
+                    </span>
+
+                    <span class="av-detalle">
+                        Lote {{ lote.lote }} · {{ lote.cantidad }} unidad(es) ·
+                        {{ lote.bodega }} · {{ lote.fecha }}
+                    </span>
+
+                </li>
+
+            {% endfor %}
+
+        </ul>
+
+    </div>
+
+
+    <button
+        type="button"
+        class="av-boton"
+        id="av-boton"
+        title="Mercancía por vencer"
+        aria-label="Mercancía por vencer: {{ lotes|length }}"
+    >
+        🔔
+        <span class="av-numero">{{ lotes|length }}</span>
+    </button>
+
+</div>
+
+
+<script>
+(function () {
+
+    var raiz = document.getElementById("alerta-venc");
+
+    if (!raiz) { return; }
+
+    var boton = document.getElementById("av-boton");
+    var panel = document.getElementById("av-panel");
+    var aviso = document.getElementById("av-aviso");
+
+    function abrirPanel() {
+        aviso.classList.remove("abierto");
+        panel.classList.toggle("abierto");
+    }
+
+    boton.addEventListener("click", abrirPanel);
+    aviso.addEventListener("click", abrirPanel);
+
+    /* El aviso emergente sale una vez por cambio en la lista
+       (no en cada página que se abre). */
+
+    var firma = raiz.getAttribute("data-firma");
+    var yaVisto = null;
+
+    try {
+        yaVisto = sessionStorage.getItem("venc_firma");
+    } catch (e) {}
+
+    if (yaVisto !== firma) {
+
+        aviso.classList.add("abierto");
+
+        setTimeout(function () {
+            aviso.classList.remove("abierto");
+        }, 9000);
+
+        try {
+            sessionStorage.setItem("venc_firma", firma);
+        } catch (e) {}
+
+    }
+
+})();
+</script>

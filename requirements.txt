@@ -1,0 +1,7 @@
+# Paquetes de Python que necesita el programa de la salsamentaria.
+# Instalar todo de una vez (en la carpeta donde está este archivo):
+#     pip install -r requirements.txt
+
+Flask>=3.1            # el programa web (incluye Werkzeug, Jinja2, itsdangerous, click, blinker y MarkupSafe)
+psycopg2-binary>=2.9  # conexión con PostgreSQL
+cryptography>=42      # cifrado de las contraseñas de empleados (Fernet)
